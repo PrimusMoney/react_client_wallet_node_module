@@ -12,7 +12,12 @@ class React_Client_Wallet {
 		this.initializationpromise = null;
 		
 		//var Ethereum_core = require('@p2pmoney-org/ethereum_core');
-		var PrimusMoney_client_wallet = require('../../@p2pmoney-org/client_wallet');
+		var Ethereum_core = require('../../@p2pmoney-org/ethereum_core');
+		
+		this.ethereum_core = Ethereum_core.getObject();
+
+		//var PrimusMoney_client_wallet = require('@primusmoney/client_wallet');
+		var PrimusMoney_client_wallet = require('../../@primusmoney/client_wallet');
 		
 		this.primusmoney_client_wallet = PrimusMoney_client_wallet.getObject();
 	}
@@ -101,6 +106,14 @@ class React_Client_Wallet {
 			return global.simplestore.Global.getGlobalObject();
 		}
 		
+	}
+
+	getMvcAPI() {
+		var clientglobal = this.getGlobalObject();
+		
+		var mvcmodule = clientglobal.getModuleObject('mvc');
+
+		return mvcmodule;
 	}
 	
 	getControllersObject() {

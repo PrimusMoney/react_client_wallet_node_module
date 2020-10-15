@@ -8,11 +8,11 @@ var rootscriptloader = ScriptLoader.getRootScriptLoader();
 
 var globalscriptloader = ScriptLoader.findScriptLoader('globalloader')
 
-var xtrascriptloader = globalscriptloader.getChildLoader('clientwalletconfig');
+var xtrascriptloader = globalscriptloader.getChildLoader('reactclientwalletconfig');
 
 // client modules
-rootscriptloader.push_import(xtrascriptloader,'../../imports/includes/modules/module.js')
-import '../../imports/includes/modules/module-load.js';
+rootscriptloader.push_import(xtrascriptloader,'../../imports/includes/module-load.js')
+import '../../imports/includes/module-load.js';
 
 
 xtrascriptloader.load_scripts();

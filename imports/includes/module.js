@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.13.5.40.2020.09.28";
+		this.current_version = "0.14.7.2020.10.15";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -181,10 +181,14 @@ var Module = class {
 		return this.clientmodule;
 
 		// legacy
+		var global = this.global;
 		var mobileclientmodule = global.getModuleObject('mobileclient');
 
-		if (mobileclientmodule)
-		return mobileclientmodule;
+		if (mobileclientmodule) {
+			this.clientmodule = mobileclientmodule;
+
+			return mobileclientmodule;
+		}
 	}
 
 	setClientModuleObject(module) {
@@ -234,6 +238,9 @@ var Module = class {
 		var global = this.global;
 		var mobileclientmodule = global.getModuleObject('mobileclient');
 		
+		if (!mobileclientmodule)
+			return;
+
 		return mobileclientmodule.getExecutionEnvironment();
 	}
 	// legacy end
@@ -242,12 +249,18 @@ var Module = class {
 	getClientExecutionEnvironment() {
 		var clientmodule = this.getClientModuleObject()
 		
+		if (!clientmodule)
+			return;
+
 		return clientmodule.getExecutionEnvironment();
 	}
 	
 	async initProdEnvironment() {
 		var clientmodule = this.getClientModuleObject()
 		
+		if (!clientmodule)
+			return;
+
 		return clientmodule.initprod(true);
 	}
 	
@@ -258,13 +271,23 @@ var Module = class {
 	}
 
 	getBuiltinLocalNetworks() {
-		let ClientConfig = this.clientmodule.getClientConfig();
+		var clientmodule = this.getClientModuleObject()
+		
+		if (!clientmodule)
+			return;
+
+		let ClientConfig = clientmodule.getClientConfig();
 
 		return ClientConfig.builtin_local_networks;
 	}
 	
 	getBuiltinRemoteNetworks() {
-		let ClientConfig = this.clientmodule.getClientConfig();
+		var clientmodule = this.getClientModuleObject()
+		
+		if (!clientmodule)
+			return;
+
+		let ClientConfig = clientmodule.getClientConfig();
 
 		return ClientConfig.builtin_remote_networks;
 	}

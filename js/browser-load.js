@@ -45,7 +45,7 @@ class BrowserLoad {
 			var GlobalClass = _globalscope.simplestore.Global;
 			
 			// web module ready
-			rootscriptloader.registerEventListener('@primusmoney/on_primus_client_wallet_module_ready', function(eventname) {
+			rootscriptloader.registerEventListener('@primusmoney/on_primus_react_client_wallet_module_ready', function(eventname) {
 				
 				if (callback)
 					callback(null, self);
@@ -60,12 +60,12 @@ class BrowserLoad {
 			ScriptLoader.reclaimScriptLoaderName('xtraconfig'); // already used by ethereum_core
 			ScriptLoader.reclaimScriptLoaderName('xtramoduleloader'); // already used by ethereum_core
 			ScriptLoader.reclaimScriptLoaderName('xtraconfigmoduleloader'); // already used by ethereum_core
-			var xtrawebscriptloader = modulescriptloader.getChildLoader('@primusmoney/clientwallet');
+			var xtrawebscriptloader = modulescriptloader.getChildLoader('@primusmoney/reactclientwallet');
 			
 			require('./loaders/react-client-wallet-load.js');
 			
 			xtrawebscriptloader.load_scripts(function() {
-				rootscriptloader.signalEvent('@primusmoney/on_primus_client_wallet_module_ready');
+				rootscriptloader.signalEvent('@primusmoney/on_primus_react_client_wallet_module_ready');
 			});
 			
 			

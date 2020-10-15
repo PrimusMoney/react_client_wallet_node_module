@@ -4,9 +4,9 @@
 'use strict';
 
 
-console.log('@primusmoney/react_client_wallet rmodule');
+console.log('@primusmoney/react_client_wallet module');
 
-if ( typeof window !== 'undefined' && window ) {
+if ( typeof window !== 'undefined' && window && (typeof window.simplestore === 'undefined')) {
 	// browser or react-native
 	console.log('creating window.simplestore in @primusmoney/react_client_wallet index.js');
 
