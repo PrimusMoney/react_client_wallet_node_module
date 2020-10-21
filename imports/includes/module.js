@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.14.7.2020.10.15";
+		this.current_version = "0.14.8.2020.10.21";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -209,6 +209,16 @@ var Module = class {
 	}
 
 	_getClientAPI() {
+		if (this.clientapicontrollers)
+		return this.clientapicontrollers;
+
+		// setClientModuleObject was not called
+		var global = this.global;
+
+		var clientsmodule = global.getModuleObject('clientmodules');
+
+		this.clientapicontrollers = clientsmodule.getControllersObject();
+
 		return this.clientapicontrollers;
 	}
 
