@@ -22,6 +22,11 @@ class React_Client_Wallet {
 		this.primusmoney_client_wallet = PrimusMoney_client_wallet.getObject();
 	}
 	
+	getVersion() {
+		var packagejson = require('./package.json');
+		return packagejson.version;
+	}
+	
 	async init(callback) {
 		console.log('@primusmoney/react_client_wallet init called');
 		
