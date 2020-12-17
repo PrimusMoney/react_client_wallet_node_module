@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.20.1.2020.11.23";
+		this.current_version = "0.20.3.2020.12.05";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -315,6 +315,156 @@ var Module = class {
 			s4() + '-' + s4() + s4() + s4();
 	}
 	
+	async createChildSession(sessionuuid) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+	
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var childsession = await _apicontrollers.createChildSessionObject(session);
+		childsession.MVCMOD = this.current_version;
+
+		if (!childsession)
+			return Promise.reject('could not create child session');
+			
+		return childsession.getSessionUUID();
+	}
+
+	async _getChildSessionOnWeb3Url(parentsession, web3providerurl) {
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+
+		if (!parentsession)
+			return Promise.reject('could not find create child of null session');
+
+		var web3sessionmap = parentsession.getSessionVariable('web3sessionmap');
+		
+		if (!web3sessionmap) {
+			web3sessionmap = Object.create(null);
+			parentsession.setSessionVariable('web3sessionmap', web3sessionmap);
+		}
+		
+		// we could look if a pre-existing session with corresponding web3providerurl could be re-used
+		if (web3sessionmap[web3providerurl])
+			return web3sessionmap[web3providerurl];
+
+		// else we create one and set it
+		var childsession = _apicontrollers.createChildSessionObject(parentsession);
+		childsession.MVCMOD = this.current_version;
+
+		if (!parentsession.MVCMOD_ROOT)
+			parentsession.MVCMOD_ROOT = this.current_version;
+
+		// we use local default scheme as template
+		var networkconfig = _apicontrollers.getDefaultSchemeConfig(0);
+
+		// TODO: bug waiting to be fixed (2020.11.20)
+		if (!networkconfig.ethnodeserver.web3_provider_url)
+		networkconfig.ethnodeserver.web3_provider_url = web3providerurl;
+
+		await _apicontrollers.setSessionNetworkConfig(childsession, networkconfig);
+
+		web3sessionmap[web3providerurl] = childsession;
+
+		return childsession;
+	}
+
+	// asymetric encryption
+	async rsaEncryptString(sessionuuid, walletuuid, carduuid, recipientrsapublickey, plaintext) {
+		if (!plaintext)
+			return;
+
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!walletuuid)
+			return Promise.reject('wallet uuid is undefined');
+		
+		if (!carduuid)
+			return Promise.reject('card uuid is undefined');
+		
+		var global = this.global;
+		var mvcmodule = global.getModuleObject('mvc');
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+		
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+		
+		var card = await wallet.getCardFromUUID(carduuid);
+		
+		if (!card)
+			return Promise.reject('could not find card ' + carduuid);
+			
+		var senderaccount = card._getSessionAccountObject();
+		var recipientaccount = session.createBlankAccountObject();
+		
+		recipientaccount.setRsaPublicKey(recipientrsapublickey);
+		
+		var cyphertext = _apicontrollers.rsaEncryptString(senderaccount, recipientaccount, plaintext);
+	
+		return cyphertext;
+	}
+	
+	async rsaDecryptString(sessionuuid, walletuuid, carduuid, senderrsapublickey, cyphertext) {
+		if (!cyphertext)
+			return;
+
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!walletuuid)
+			return Promise.reject('wallet uuid is undefined');
+		
+		if (!carduuid)
+			return Promise.reject('card uuid is undefined');
+		
+		var global = this.global;
+		var mvcmodule = global.getModuleObject('mvc');
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+		
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+		
+		var card = await wallet.getCardFromUUID(carduuid);
+		
+		if (!card)
+			return Promise.reject('could not find card ' + carduuid);
+			
+
+		var senderaccount = session.createBlankAccountObject();
+		var recipientaccount = card._getSessionAccountObject();;
+		
+		senderaccount.setRsaPublicKey(senderrsapublickey);
+		
+		var plaintext = _apicontrollers.rsaDecryptString(recipientaccount, senderaccount, cyphertext);
+
+		return plaintext;
+	}
+
+	t(string) {
+		// translation
+		return this.global.t(string);
+	}
+
 	// Settings
 	async readSettings(keys, defaultvalue) {
 		var _apicontrollers = this._getClientAPI();
@@ -329,6 +479,38 @@ var Module = class {
 		
 		return _apicontrollers.putSettings(session, keys, json);
 	}
+
+	// local storage
+	async getLocalJsonLeaf(sessionuuid, keys, bForceRefresh) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+	
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+	
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		return _apicontrollers.getLocalJsonLeaf(session, keys, bForceRefresh);
+	}
+	
+	async saveLocalJson(sessionuuid, keys, json) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+	
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+	
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		return _apicontrollers.saveLocalJson(session, keys, json);
+	}
+
 	
 	// events
 	signalEvent(event) {
