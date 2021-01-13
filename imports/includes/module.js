@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.20.5.2021.01.15";
+		this.current_version = "0.20.6.2021.01.15";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -361,11 +361,7 @@ var Module = class {
 			parentsession.MVCMOD_ROOT = this.current_version;
 
 		// we use local default scheme as template
-		var networkconfig = _apicontrollers.getDefaultSchemeConfig(0);
-
-		// TODO: bug waiting to be fixed (2020.11.20)
-		if (!networkconfig.ethnodeserver.web3_provider_url)
-		networkconfig.ethnodeserver.web3_provider_url = web3providerurl;
+		var networkconfig = await _apicontrollers.createLocalSchemeConfig(childsession, web3providerurl);
 
 		await _apicontrollers.setSessionNetworkConfig(childsession, networkconfig);
 
@@ -374,6 +370,130 @@ var Module = class {
 		return childsession;
 	}
 
+	// symetric encryption
+	async getCardPrivateKey(sessionuuid, walletuuid, carduuid) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!walletuuid)
+			return Promise.reject('wallet uuid is undefined');
+		
+		if (!carduuid)
+			return Promise.reject('card uuid is undefined');
+		
+		var global = this.global;
+		var mvcmodule = global.getModuleObject('mvc');
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+		
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+		
+		var card = await wallet.getCardFromUUID(carduuid);
+		
+		if (!card)
+			return Promise.reject('could not find card ' + carduuid);
+
+		var cardaccount = card._getSessionAccountObject();
+
+		if (!cardaccount)
+			return Promise.reject('card has no private key ' + carduuid);
+
+		var privatekey = cardaccount.getPrivateKey();
+
+		return privatekey;
+	}
+
+	async aesEncryptString(sessionuuid, walletuuid, carduuid, plaintext) {
+		if (!plaintext)
+			return;
+
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!walletuuid)
+			return Promise.reject('wallet uuid is undefined');
+		
+		if (!carduuid)
+			return Promise.reject('card uuid is undefined');
+		
+		var global = this.global;
+		var mvcmodule = global.getModuleObject('mvc');
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+		
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+		
+		var card = await wallet.getCardFromUUID(carduuid);
+		
+		if (!card)
+			return Promise.reject('could not find card ' + carduuid);
+
+		var cardaccount = card._getSessionAccountObject();
+
+		if (!cardaccount)
+			return Promise.reject('card can not encrypt texts ' + carduuid);
+
+		var privatekey = cardaccount.getPrivateKey();
+
+		return _apicontrollers.aesEncryptString(session, privatekey, plaintext);
+	}
+
+	async aesDecryptString(sessionuuid, walletuuid, carduuid, cyphertext) {
+		if (!cyphertext)
+			return;
+
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!walletuuid)
+			return Promise.reject('wallet uuid is undefined');
+		
+		if (!carduuid)
+			return Promise.reject('card uuid is undefined');
+		
+		var global = this.global;
+		var mvcmodule = global.getModuleObject('mvc');
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+		
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+		
+		var card = await wallet.getCardFromUUID(carduuid);
+		
+		if (!card)
+			return Promise.reject('could not find card ' + carduuid);
+
+		var cardaccount = card._getSessionAccountObject();
+
+		if (!cardaccount)
+			return Promise.reject('card can not decrypt texts ' + carduuid);
+
+		var privatekey = cardaccount.getPrivateKey();
+
+		return _apicontrollers.aesDecryptString(session, privatekey, cyphertext);
+	}
+	
 	// asymetric encryption
 	async rsaEncryptString(sessionuuid, walletuuid, carduuid, recipientrsapublickey, plaintext) {
 		if (!plaintext)
