@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.20.6.2021.01.15";
+		this.current_version = "0.20.7.2021.02.18";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -302,8 +302,10 @@ var Module = class {
 		return ClientConfig.builtin_remote_networks;
 	}
 	
+	//
 	// API
-	
+	//
+
 	guid() {
 		function s4() {
 			return Math.floor((1 + Math.random()) * 0x10000)
@@ -315,6 +317,15 @@ var Module = class {
 			s4() + '-' + s4() + s4() + s4();
 	}
 	
+	t(string) {
+		// translation
+		return this.global.t(string);
+	}
+
+	//
+	// Session functions
+	//
+
 	async createChildSession(sessionuuid) {
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
@@ -370,6 +381,202 @@ var Module = class {
 		return childsession;
 	}
 
+		
+	// session
+	getCurrentSessionObject() {
+		var _apicontrollers = this._getClientAPI();
+		
+		return _apicontrollers.getCurrentSessionObject();
+	}
+	
+	async getSessionObject(sessionuuid) {
+		var _apicontrollers = this._getClientAPI();
+		
+		return _apicontrollers.getSessionObject(sessionuuid);
+	}
+	
+	// user
+	async getUserInfo(sessionuuid) {
+		if (!sessionuuid)
+			return {};
+		
+		var _apicontrollers = this._getClientAPI();
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		return _apicontrollers.getUserInfo(session);
+	}
+	
+	async isValidEmailAddress(sessionuuid, emailaddress) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+
+		var _apicontrollers = this._getClientAPI();
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+
+		return _apicontrollers.isValidEmail(session, emailaddress);
+	}
+
+	//
+	// Crypto functions
+	//
+
+	async isValidAddress(sessionuuid, address) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var _apicontrollers = this._getClientAPI();
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+
+		return _apicontrollers.isValidAddress(session, address);
+	}
+	
+	async generatePrivateKey(sessionuuid) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var _apicontrollers = this._getClientAPI();
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+
+		return _apicontrollers.generatePrivateKey(session);
+	}
+	
+	async isValidPrivateKey(sessionuuid, privatekey) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var _apicontrollers = this._getClientAPI();
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+
+		return _apicontrollers.isValidPrivateKey(session, privatekey);
+	}
+	
+	async getPublicKeys(sessionuuid, privatekey) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var _apicontrollers = this._getClientAPI();
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+
+		return _apicontrollers.getPublicKeys(session, privatekey);
+	}
+	
+	async areAddressesEqual(sessionuuid, address1, address2) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var _apicontrollers = this._getClientAPI();
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+
+		return session.areAddressesEqual(address1, address2);
+	}
+	
+
+	//
+	// Storage
+	//
+
+	// Settings
+	async readSettings(keys, defaultvalue) {
+		var _apicontrollers = this._getClientAPI();
+		var session = this.getCurrentSessionObject();
+		
+		return _apicontrollers.readSettings(session, keys, defaultvalue);
+	}
+	
+	async putSettings(keys, json) {
+		var _apicontrollers = this._getClientAPI();
+		var session = this.getCurrentSessionObject();
+		
+		return _apicontrollers.putSettings(session, keys, json);
+	}
+
+	// local storage
+	async getLocalJsonLeaf(sessionuuid, keys, bForceRefresh) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+	
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+	
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		return _apicontrollers.getLocalJsonLeaf(session, keys, bForceRefresh);
+	}
+	
+	async saveLocalJson(sessionuuid, keys, json) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+	
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+	
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		return _apicontrollers.saveLocalJson(session, keys, json);
+	}
+
+	async hasPrivateKey(sessionuuid, address) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+	
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+	
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		return session.isSessionAccountAddress(address);
+	}
+
+	
+	// events
+	signalEvent(event) {
+		var global = this.global;
+		global.signalEvent(event);
+	}
+	
+	registerEventListener(eventname, listerneruuid, callback) {
+		var global = this.global;
+		
+		console.log('registerEventListener for event ' + eventname + ' by ' + listerneruuid);
+		
+		global.registerEventListener(eventname, listerneruuid, callback);
+	}
+	
+	unregisterEventListener(eventname, listerneruuid) {
+		var global = this.global;
+		
+		console.log('unregisterEventListener for event ' + eventname + ' by ' + listerneruuid);
+		
+		global.unregisterEventListener(eventname, listerneruuid);
+	}
+	
+	// hooks
+	async invokeHooks(hookname, result, params) {
+		var global = this.global;
+		
+		return global.invokeHooks(hookname, result, params);
+	}
+		
+	async invokeAsyncHooks(hookname, result, params) {
+		var global = this.global;
+		
+		return global.invokeAsyncHooks(hookname, result, params);
+	}
+	
+
+	//
+	// Card encryption functions
+	//
+
 	// symetric encryption
 	async getCardPrivateKey(sessionuuid, walletuuid, carduuid) {
 		if (!sessionuuid)
@@ -410,6 +617,57 @@ var Module = class {
 		return privatekey;
 	}
 
+	async setCardPrivateKey(sessionuuid, walletuuid, carduuid, privatekey) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!walletuuid)
+			return Promise.reject('wallet uuid is undefined');
+		
+		if (!carduuid)
+			return Promise.reject('card uuid is undefined');
+		
+		var global = this.global;
+		var mvcmodule = global.getModuleObject('mvc');
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+		
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+		
+		var card = await wallet.getCardFromUUID(carduuid);
+		
+		if (!card)
+			return Promise.reject('could not find card ' + carduuid);
+
+		var cardaccount = card._getSessionAccountObject();
+
+		if (cardaccount)
+			return false; // we don't change the private key
+
+		var cardaddress = card.getAddress();
+
+		var account = session.createBlankAccountObject();
+
+		account.setPrivateKey(privatekey);
+
+		if (account.getAddress() == cardaddress) {
+			var bSave = true;
+
+			wallet._createClientAccountObject(privatekey, bSave);
+
+			return true;
+		}
+
+		return false;
+	}
+	
 	async aesEncryptString(sessionuuid, walletuuid, carduuid, plaintext) {
 		if (!plaintext)
 			return;
@@ -580,28 +838,15 @@ var Module = class {
 		return plaintext;
 	}
 
-	t(string) {
-		// translation
-		return this.global.t(string);
-	}
 
-	// Settings
-	async readSettings(keys, defaultvalue) {
-		var _apicontrollers = this._getClientAPI();
-		var session = this.getCurrentSessionObject();
-		
-		return _apicontrollers.readSettings(session, keys, defaultvalue);
-	}
-	
-	async putSettings(keys, json) {
-		var _apicontrollers = this._getClientAPI();
-		var session = this.getCurrentSessionObject();
-		
-		return _apicontrollers.putSettings(session, keys, json);
-	}
 
-	// local storage
-	async getLocalJsonLeaf(sessionuuid, keys, bForceRefresh) {
+
+
+	//
+	// Scheme functions
+	//
+
+	async getDefaultLocalSchemeInfo(sessionuuid) {
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
 		
@@ -613,150 +858,90 @@ var Module = class {
 		if (!session)
 			return Promise.reject('could not find session ' + sessionuuid);
 		
-		return _apicontrollers.getLocalJsonLeaf(session, keys, bForceRefresh);
+		var scheme = await _apicontrollers.getDefaultScheme(session, 0);
+
+		var mvcmodule = global.getModuleObject('mvc');
+
+		let schemeinfo = {};
+		mvcmodule._fillSchemeInfoFromScheme(schemeinfo, scheme);
+
+		return schemeinfo;
 	}
-	
-	async saveLocalJson(sessionuuid, keys, json) {
+
+	_getAverageTransactionFee(scheme) {
+		// TODO: for version >= 0.20.7 replace with
+		// return scheme.getAverageTransactionFee()
+		var global = this.global;
+		var ethnodemodule = global.getModuleObject('ethnode');
+		
+		var Scheme = global.getModuleClass('wallet', 'Scheme');
+		var avg_transaction_fee = Scheme.AVG_TRANSACTION_FEE;
+
+		var ethnodeserver = scheme.getEthNodeServerConfig();
+		
+		if (ethnodeserver && ethnodeserver.avg_transaction_fee)
+			avg_transaction_fee = parseFloat(ethnodeserver.avg_transaction_fee.toString());
+
+		return avg_transaction_fee;
+	}
+
+	_getTransactionCredits(scheme, transactionunits) {
+		// TODO: for version >= 0.20.7 replace with
+		// return scheme.getTransactionCredits(transactionunits)
+
+		// NOTE: to get an integer we need to use DecimalAmount
+
+		var global = this.global;
+		var ethnodemodule = global.getModuleObject('ethnode');
+		
+		var Scheme = global.getModuleClass('wallet', 'Scheme');
+		var avg_transaction_fee = Scheme.AVG_TRANSACTION_FEE;
+
+		var ethnodeserver = scheme.getEthNodeServerConfig();
+		
+		if (ethnodeserver && ethnodeserver.avg_transaction_fee)
+			avg_transaction_fee = parseFloat(ethnodeserver.avg_transaction_fee.toString());
+		
+		var transactioncredits = transactionunits*(avg_transaction_fee > 0 ? avg_transaction_fee : Scheme.AVG_TRANSACTION_FEE);
+		var ethcredit = ethnodemodule.getEtherFromwei(transactioncredits);
+		
+		return ethcredit;
+	}
+
+	async getSchemeTransactionInfo(sessionuuid, schemeuuid, level = 0) {
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
 		
 		var global = this.global;
 		var _apicontrollers = this._getClientAPI();
-	
+
 		var session = await _apicontrollers.getSessionObject(sessionuuid);
-	
+		
 		if (!session)
 			return Promise.reject('could not find session ' + sessionuuid);
+
+		var	scheme = await _apicontrollers.getSchemeFromUUID(session, schemeuuid)
+		.catch(err => {});
+
+
+		var transactioninfo  = {};
+
+		transactioninfo.gasLimit = scheme.getGasLimit(level);
+		transactioninfo.gasPrice = scheme.getGasPrice(level);
+		transactioninfo.avg_transaction_fee = this._getAverageTransactionFee(scheme);
+		transactioninfo.units_threshold = scheme.getTransactionUnitsThreshold();
 		
-		return _apicontrollers.saveLocalJson(session, keys, json);
+		var ethnodemodule = global.getModuleObject('ethnode');
+
+		var weiamount = ethnodemodule.getWeiFromEther(transactioninfo.avg_transaction_fee);
+		var avg_transaction = await DecimalAmount.create(session, weiamount, 18);
+		var credits_threshold = await avg_transaction.multiply(transactioninfo.units_threshold);
+
+		transactioninfo.credits_threshold = await credits_threshold.toInteger();
+
+		return transactioninfo;
 	}
 
-	
-	// events
-	signalEvent(event) {
-		var global = this.global;
-		global.signalEvent(event);
-	}
-	
-	registerEventListener(eventname, listerneruuid, callback) {
-		var global = this.global;
-		
-		console.log('registerEventListener for event ' + eventname + ' by ' + listerneruuid);
-		
-		global.registerEventListener(eventname, listerneruuid, callback);
-	}
-	
-	unregisterEventListener(eventname, listerneruuid) {
-		var global = this.global;
-		
-		console.log('unregisterEventListener for event ' + eventname + ' by ' + listerneruuid);
-		
-		global.unregisterEventListener(eventname, listerneruuid);
-	}
-	
-	// hooks
-	async invokeHooks(hookname, result, params) {
-		var global = this.global;
-		
-		return global.invokeHooks(hookname, result, params);
-	}
-		
-	async invokeAsyncHooks(hookname, result, params) {
-		var global = this.global;
-		
-		return global.invokeAsyncHooks(hookname, result, params);
-	}
-	
-
-	
-	// session
-	getCurrentSessionObject() {
-		var _apicontrollers = this._getClientAPI();
-		
-		return _apicontrollers.getCurrentSessionObject();
-	}
-	
-	async getSessionObject(sessionuuid) {
-		var _apicontrollers = this._getClientAPI();
-		
-		return _apicontrollers.getSessionObject(sessionuuid);
-	}
-	
-	// user
-	async getUserInfo(sessionuuid) {
-		if (!sessionuuid)
-			return {};
-		
-		var _apicontrollers = this._getClientAPI();
-		var session = await _apicontrollers.getSessionObject(sessionuuid);
-		
-		return _apicontrollers.getUserInfo(session);
-	}
-	
-	async isValidEmailAddress(sessionuuid, emailaddress) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-
-		var _apicontrollers = this._getClientAPI();
-		var session = await _apicontrollers.getSessionObject(sessionuuid);
-
-		return _apicontrollers.isValidEmail(session, emailaddress);
-	}
-	
-	// crypto
-	async isValidAddress(sessionuuid, address) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
-		var _apicontrollers = this._getClientAPI();
-		var session = await _apicontrollers.getSessionObject(sessionuuid);
-
-		return _apicontrollers.isValidAddress(session, address);
-	}
-	
-	async generatePrivateKey(sessionuuid) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
-		var _apicontrollers = this._getClientAPI();
-		var session = await _apicontrollers.getSessionObject(sessionuuid);
-
-		return _apicontrollers.generatePrivateKey(session);
-	}
-	
-	async isValidPrivateKey(sessionuuid, privatekey) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
-		var _apicontrollers = this._getClientAPI();
-		var session = await _apicontrollers.getSessionObject(sessionuuid);
-
-		return _apicontrollers.isValidPrivateKey(session, privatekey);
-	}
-	
-	async getPublicKeys(sessionuuid, privatekey) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
-		var _apicontrollers = this._getClientAPI();
-		var session = await _apicontrollers.getSessionObject(sessionuuid);
-
-		return _apicontrollers.getPublicKeys(session, privatekey);
-	}
-	
-	async areAddressesEqual(sessionuuid, address1, address2) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
-		var _apicontrollers = this._getClientAPI();
-		var session = await _apicontrollers.getSessionObject(sessionuuid);
-
-		return session.areAddressesEqual(address1, address2);
-	}
-	
-
-	
-	// schemes
 	async getSchemeList(sessionuuid, bRefresh) {
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
@@ -890,8 +1075,6 @@ var Module = class {
 		
 		return schemeinfo;
 	}
-
-	
 	
 	async getSchemeInfo(sessionuuid, schemeuuid) {
 		if (!sessionuuid)
@@ -952,8 +1135,47 @@ var Module = class {
 		
 		return scheme.canHandleWeb3ProviderUrl(web3_provider_url);
 	}
+
+	async oauth2AuthorizeUrl(sessionuuid, schemeuuid, params) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!schemeuuid)
+			return Promise.reject('scheme uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
 	
-	// wallets
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+	
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var scheme = await _apicontrollers.getSchemeFromUUID(session, schemeuuid);
+
+		if (!scheme)
+			return Promise.reject('can not find scheme with uuid ' + schemeuuid);
+
+		// set network config
+		//var network = scheme.getNetworkConfig();
+		var network = this._getSchemeNetworkConfig(scheme);
+				
+		await _apicontrollers.setSessionNetworkConfig(session, network);
+
+		// get authorize url
+		const authorizeurl = await _apicontrollers.getOAuth2AuthorizeUrl(session, params)
+		.catch((err) => {
+			console.log('error in oauth2AuthorizeUrl ' + err);
+		});
+
+		return authorizeurl;
+	}
+
+	
+	//
+	// Wallet functions
+	//
+
 	async isWalletLocked(sessionuuid, walletuuid) {
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
@@ -1054,8 +1276,266 @@ var Module = class {
 		
 		return _apicontrollers.putInWallet(session, wallet, key, value);
 	}
+
+	async makeWallet(sessionuuid, authname, schemeuuid, password) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+
+		var	scheme = await _apicontrollers.getSchemeFromUUID(session, schemeuuid)
+		.catch(err => {});
+
+
+		var wallet_new;
+
+		if (!scheme || (scheme.isRemote() !== true))
+			wallet_new =  await _apicontrollers.createWallet(session, authname, password);
+		else
+			wallet_new =  await _apicontrollers.makeWallet(session, authname, schemeuuid);
+
+		if (wallet_new) {
+			let unlocked = await wallet_new.unlock(password);
+			
+			if (unlocked) {
+				// we add additional information like ownername and owner email
+				let walletsession = wallet_new._getSession();
+				let walletuser = walletsession.getSessionUserObject();
+
+				if (walletuser) {
+					wallet_new.setOwnerName(walletuser.getUserName());
+					wallet_new.setOwnerEmail(walletuser.getUserEmail());
+				}
+
+				await wallet_new.save();
+			}
+			else {
+				throw new Error('wrong credentials');
+			}
+
+			return wallet_new;
+		}
+		else
+			throw new Error('could not create wallet');
+	}
+
+	async makeWalletFromSession(sessionuuid, schemeuuid) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+
+		var commonmodule = global.getModuleObject('common');
+
+		var session = await commonmodule.createBlankSessionObject();
+
+		if (!session)
+			return Promise.reject('could not create session ' + sessionuuid);
+
+		session.setSessionUUID(sessionuuid);
+
+		var walletmodule = global.getModuleObject('wallet');
+		var Wallet = global.getModuleClass('wallet', 'Wallet');
+
+		var scheme = await walletmodule.getSchemeFromUUID(session, schemeuuid);
+
+		if (!scheme)
+			throw new Error('could not find scheme');
+
+		// set network config to the session
+		//var network = scheme.getNetworkConfig();
+		var network = this._getSchemeNetworkConfig(scheme);
+				
+		await _apicontrollers.setSessionNetworkConfig(session, network);
+
+		let isanonymous = await this._isAnonymousAsync(session);
+		if (isanonymous)
+			return Promise.reject('session needs to be authenticated');
+
+		let user = session.getSessionUserObject();
+
+		// we create a new wallet
+		var wallettype = scheme.getSchemeType();
+
+		var walletjson = {};
+		walletjson.type = wallettype;
+		walletjson.uuid = session.guid();;
+		walletjson.schemeuuid = schemeuuid;
+		walletjson.authname = scheme.getName();
+		walletjson.label = scheme.getName();
+
+		walletjson.ownername = (user ? user.getUserName() : '');
+		walletjson.owneremail = (user ? user.getUserEmail() : '');
 	
-	// cards
+
+		const wallet_new =  Wallet.readFromJson(walletmodule, session, walletjson);
+
+
+		if (wallet_new) {
+			// we attach the session to the wallet
+			await this._attachSessionToWallet(session, wallet_new);
+			
+			// and save it
+			await wallet_new.save();
+
+			return wallet_new;
+		}
+		else
+			throw new Error('could not create wallet');
+	}
+
+	async _isAnonymousAsync(session) {
+		// we clean authkey isSessionAnonymous_hook to make it really async
+		var global = this.global;
+
+		var authkeymodule = global.getModuleObject('authkey');
+
+		var authkeyinterface = authkeymodule.getAuthKeyInterface();
+		var currentanonymousflag = (session.user == null);
+
+		var sessionstatus = await authkeyinterface.session_status(session);
+
+		if (sessionstatus['isauthenticated'] === false) {
+			if (currentanonymousflag === false) {
+				session.disconnectUser();
+			}
+		}
+		else {
+			if (currentanonymousflag === true) {
+				var res = await authkeyinterface.load_user_in_session(session);
+
+				var authenticated = (res['status'] == '1' ? true : false);
+							
+				if (authenticated) {
+					// authenticated (and crypto-keys have been loaded)
+					// we get list of accounts (that could be encrypted)
+					await authkeymodule._initializeAccounts(session);
+					
+				}
+			}
+		}
+
+		return sessionstatus['isanonymous'];
+	}
+
+	async _attachSessionToWallet(session, wallet) {
+		wallet.walletsession = session;
+
+		if (session.user) {
+			wallet.locked = false;
+			await wallet._onUnlock();
+
+			// we check wallet user name and email
+			var bSave = false;
+
+			var session_username = session.user.getUserName();
+			var session_useremail = session.user.getUserEmail();
+
+			var wallet_ownername = wallet.getOwnerName();
+			var wallet_owneremail = wallet.getOwnerEmail();
+
+			if (!wallet_ownername) {
+				if (session_username) {
+					wallet.setOwnerName(session_username);
+					bSave = true;
+				}
+			}
+			else if (session_username && (session_username != wallet_ownername)) {
+				wallet.setOwnerName(session_username);
+				bSave = true;
+			}
+
+			if (!wallet_owneremail) {
+				if (session_useremail) {
+					wallet.setOwnerEmail(session_useremail);
+					bSave = true;
+				}
+			}
+			else if (session_useremail && (session_useremail != wallet_owneremail)) {
+				wallet.setOwnerEmail(session_useremail);
+				bSave = true;
+			}
+
+			if (bSave)
+			await wallet.save();
+		}
+	}
+
+	async attachSessionToWallet(sessionuuid, walletuuid) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+
+		var commonmodule = global.getModuleObject('common');
+
+		var session = await commonmodule.createBlankSessionObject();
+
+		if (!session)
+			return Promise.reject('could not create session ' + sessionuuid);
+
+		session.setSessionUUID(sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+	
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+
+		var scheme = await wallet.getScheme();
+
+		if (!scheme)
+			throw new Error('could not find scheme for wallet ' + walletuuid);
+
+		// set network config to the session
+		//var network = scheme.getNetworkConfig();
+		var network = this._getSchemeNetworkConfig(scheme);
+				
+		await _apicontrollers.setSessionNetworkConfig(session, network);
+
+		let isanonymous = await this._isAnonymousAsync(session);
+		if (isanonymous)
+			return Promise.reject('session needs to be authenticated');
+
+
+		await this._attachSessionToWallet(session, wallet);
+	}
+
+	async lockWallet(sessionuuid, walletuuid) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+
+		var commonmodule = global.getModuleObject('common');
+
+		var session = await commonmodule.createBlankSessionObject();
+
+		if (!session)
+			return Promise.reject('could not create session ' + sessionuuid);
+
+		session.setSessionUUID(sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+	
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+
+		return wallet.lock();
+	}
+	
+	//
+	// Card functions
+	//
+
 	async getCardList(sessionuuid, walletuuid, bRefresh) {
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
@@ -1083,6 +1563,50 @@ var Module = class {
 		
 		return array;
 	}
+
+	async getCardListOnWeb3Url(sessionuuid, walletuuid, web3url) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!walletuuid)
+			return Promise.reject('wallet uuid is undefined');
+		
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+		
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+
+		
+		var mvcmodule = global.getModuleObject('mvc');
+
+		var cards = await wallet.getCardList(true);
+
+		var array = [];
+			
+		for (var i = 0; i < (cards ? cards.length : 0); i++) {
+			var _crduuid = cards[i].getCardUUID();
+			var cardinfo = {uuid: _crduuid};
+			
+			var bCanHandle = await mvcmodule.canCardHandleERC20TokensOn(sessionuuid, walletuuid, _crduuid, web3url);
+			
+			if (bCanHandle) {
+				mvcmodule._fillCardInfo(cardinfo, cards[i]);
+				
+				array.push(cardinfo);
+			}
+		}
+			
+		return array;
+	}
+
 	
 	async getCardSiblings(sessionuuid, walletuuid, carduuid, bRefresh = true) {
 		if (!sessionuuid)
@@ -1490,6 +2014,19 @@ var Module = class {
 		return topinfo;
 	}
 	
+	async getCardSchemeInfo(sessionuuid, walletuuid, carduuid) {
+		var global = this.global;
+		var _apicontrollers = this._getClientAPI();
+
+		var mvcmodule = global.getModuleObject('mvc');
+
+		var cardinfo = await mvcmodule.getCardInfo(sessionuuid, walletuuid, carduuid);
+
+		var schemeinfo = await mvcmodule.getSchemeInfo(sessionuuid, cardinfo.schemeuuid);
+
+		return schemeinfo;
+	}
+
 	async getCreditBalance(sessionuuid, walletuuid, carduuid) {
 		
 		if (!sessionuuid)
@@ -1508,13 +2045,114 @@ var Module = class {
 		
 		var card = await wallet.getCardFromUUID(carduuid);
 		
+		if (!card)
+			return Promise.reject('could not find card ' + carduuid);
+
 		var transactioncredits = await card.getTransactionCredits();
 		var transactionunits = await card.getTransactionUnits();
 		
-		return {transactioncredits: transactioncredits, transactionunits: transactionunits};
+		var credits = {transactioncredits: transactioncredits, transactionunits: transactionunits};
+
+		// add threshold		
+		var schemeuuid = card.getSchemeUUID();
+
+		credits.threshold = await mvcmodule.getSchemeTransactionUnitsThreshold(sessionuuid, schemeuuid);
+
+		return credits;
+
 	}
+
+	async transferTransactionUnits(sessionuuid, walletuuid, cardfromuuid, cardtouuid, units, feelevel = 0) {
+		if (!sessionuuid)
+			return Promise.reject('session uuid is undefined');
+		
+		if (!walletuuid)
+			return Promise.reject('wallet uuid is undefined');
+		
+		if (!cardfromuuid)
+			return Promise.reject('from card uuid is undefined');
+		
+		if (!cardtouuid)
+			return Promise.reject('to card uuid is undefined');
+		
+		
+		var global = this.global;
+		var mvcmodule = global.getModuleObject('mvc');
+		var _apicontrollers = this._getClientAPI();
+
+		var session = await _apicontrollers.getSessionObject(sessionuuid);
+		
+		if (!session)
+			return Promise.reject('could not find session ' + sessionuuid);
+		
+		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
+		
+		if (!wallet)
+			return Promise.reject('could not find wallet ' + walletuuid);
+		
+		var fromcard = await wallet.getCardFromUUID(cardfromuuid);
+		
+		if (!fromcard)
+			return Promise.reject('could not find card ' + cardfromuuid);
+
+		var tocard = await wallet.getCardFromUUID(cardtouuid);
 	
-	// token accounts
+		if (!tocard)
+			return Promise.reject('could not find card ' + cardtouuid);
+	
+	
+		var fromaccount = fromcard._getSessionAccountObject();
+
+		if (!fromaccount)
+			return Promise.reject('card has no private key ' + cardfromuuid);
+		
+		var cardsession = await this._getMonitoredCardSession(fromcard);
+		var from_card_scheme = fromcard.getScheme();
+
+		// TODO: for version >= 0.20.7 use call to scheme
+		//var avg_transaction_fee = from_card_scheme.getAverageTransactionFee();
+		var from_card_scheme_uuid = from_card_scheme.getSchemeUUID();
+		var transactioninfo = await this.getSchemeTransactionInfo(sessionuuid, from_card_scheme.uuid);
+		var avg_transaction_fee = transactioninfo.avg_transaction_fee; // end TODO
+
+		// create transaction object
+		var transaction = _apicontrollers.createEthereumTransaction(cardsession, fromaccount);
+		
+		// parameters
+		var ethnodemodule = global.getModuleObject('ethnode');
+
+		var toaddress = tocard.getAddress();
+		var weiamount = ethnodemodule.getWeiFromEther(transactioninfo.avg_transaction_fee);
+		var ethamount = await DecimalAmount.create(cardsession, weiamount, 18);
+		ethamount.multiply(units);
+		var valuestring = await ethamount.toFixedString();
+
+		transaction.setToAddress(toaddress);
+		transaction.setValue(valuestring);
+
+		// fee
+		var fee = await _apicontrollers.createSchemeFee(from_card_scheme, feelevel);
+
+		transaction.setGas(fee.gaslimit);
+		transaction.setGasPrice(fee.gasPrice);
+
+		
+		const txhash = await _apicontrollers.sendEthereumTransaction(cardsession, transaction)
+		.catch((err) => {
+			console.log('error in transferTransactionUnits: ' + err);
+		});
+
+		if (!txhash)
+		return Promise.reject('could not send ethereum transaction');
+
+		return txhash;
+	}
+
+	
+	//
+	// Token Accounts function
+	//
+
 	async getWalletERC20TokenAccountList(sessionuuid, walletuuid) {
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
@@ -1759,8 +2397,10 @@ var Module = class {
 		return tokenaccountinfo;
 	}
 	
-	
-	// transactions
+	//
+	// Transactions functions
+	//
+
 	_fillTransactionInfo(transactioninfo, transaction) {
 		if (!transaction)
 			return;
@@ -1810,8 +2450,10 @@ var Module = class {
 	}
 	
 
-	
-	// contacts
+	//
+	// Contacts functions
+	//
+
 	_fillContactInfo(contactinfo, contact) {
 		if (!contact)
 			return;
@@ -1895,7 +2537,10 @@ var Module = class {
 		}
 	}
 	
-	// utils
+	//
+	// Utils functions
+	//
+
 	formatDate(unixdate, format) {
 		var global = this.global;
 		

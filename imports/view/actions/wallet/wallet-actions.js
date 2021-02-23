@@ -334,6 +334,11 @@ export const doLockWallet = () => {
 	};
 };
 
+// TODO: we should implement a function
+// export const doLockWallet = (mvcmodule, sessionuuid, walletuuid)
+// that call mvcmodule to lock the wallet object
+
+
 //actions
 function createWalletPending(ispending) {
 	return {
