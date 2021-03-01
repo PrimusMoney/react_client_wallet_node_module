@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.20.7.2021.02.18";
+		this.current_version = "0.20.8.2021.03.13";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -577,7 +577,7 @@ var Module = class {
 	// Card encryption functions
 	//
 
-	// symetric encryption
+	// private keys
 	async getCardPrivateKey(sessionuuid, walletuuid, carduuid) {
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
@@ -668,6 +668,7 @@ var Module = class {
 		return false;
 	}
 	
+	// symetric encryption
 	async aesEncryptString(sessionuuid, walletuuid, carduuid, plaintext) {
 		if (!plaintext)
 			return;
@@ -2056,7 +2057,7 @@ var Module = class {
 		// add threshold		
 		var schemeuuid = card.getSchemeUUID();
 
-		credits.threshold = await mvcmodule.getSchemeTransactionUnitsThreshold(sessionuuid, schemeuuid);
+		credits.threshold = await this.getSchemeTransactionUnitsThreshold(sessionuuid, schemeuuid);
 
 		return credits;
 

@@ -10,7 +10,7 @@ var globalscriptloader = ScriptLoader.findScriptLoader('globalloader')
 
 var xtrascriptloader = globalscriptloader.getChildLoader('reactclientwalletconfig');
 
-// client modules
+// mvc modules
 rootscriptloader.push_import(xtrascriptloader,'../../imports/includes/module-load.js')
 import '../../imports/includes/module-load.js';
 
