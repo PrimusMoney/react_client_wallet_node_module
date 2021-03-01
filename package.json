@@ -1,6 +1,6 @@
 {
   "name": "@primusmoney/react_client_wallet",
-  "version": "0.20.8.1",
+  "version": "0.20.9",
   "license": "UNLICENSED",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "test:node": "mocha ./tests/tests.js"
   },
   "dependencies": {
-    "@primusmoney/client_wallet": "^0.20.8.1"
+    "@primusmoney/client_wallet": "^0.20.9"
   },
   "devDependencies": {
     "chai": "^4.2.0",
