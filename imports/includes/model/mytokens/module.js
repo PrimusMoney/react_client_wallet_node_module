@@ -88,4 +88,4 @@ GlobalClass.getGlobalObject().registerModuleObject(new Module());
 
 //dependencies
 if ( typeof GlobalClass !== 'undefined' && GlobalClass )
-GlobalClass.getGlobalObject().registerModuleDepency('mvc', 'common');
+GlobalClass.getGlobalObject().registerModuleDepency('mvc-mytokens', 'common');

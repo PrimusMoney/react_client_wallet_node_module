@@ -14,7 +14,7 @@ var Module = class {
 		this.isready = false;
 		this.isloading = false;
 		
-		this.clientapicontrollers; // API gateway
+		this.clientapicontrollers = null; // API gateway
 	}
 	
 	init() {
@@ -91,7 +91,7 @@ var Module = class {
 		global.registerHook('ERC20TokenRequestForm_amount_changed_asynchook', this.name, this.ERC20TokenTransferRequestForm_amount_changed_asynchook);
 		global.registerHook('ERC20TokenRequestForm_recipient_changed_asynchook', this.name, this.ERC20TokenTransferRequestForm_recipient_changed_asynchook);
 		global.registerHook('ERC20TokenRequestForm_onRequest_asynchook', this.name, this.ERC20TokenRequestForm_onRequest_asynchook);
-}
+	}
 	
 	postRegisterModule() {
 		console.log('postRegisterModule called for ' + this.name);
@@ -1630,4 +1630,4 @@ GlobalClass.getGlobalObject().registerModuleObject(new Module());
 
 //dependencies
 if ( typeof GlobalClass !== 'undefined' && GlobalClass )
-GlobalClass.getGlobalObject().registerModuleDepency('mvc', 'common');
+GlobalClass.getGlobalObject().registerModuleDepency('mvc-wallet', 'common');
