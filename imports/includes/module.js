@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.20.13.2021.04.07";
+		this.current_version = "0.20.14.2021.04.07";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -162,11 +162,12 @@ var Module = class {
 		this.app = app;
 
 		// set in mvc-client-wallet
-		var global = this.global;
+/* 		var global = this.global;
 		var mvcclientwallet = global.getModuleObject('mvc-client-wallet');
 		mvcclientwallet.setAppObject(app);
-		
-		// fill app object for top feelevel navigation
+		// NO DO NOT
+ */		
+		// fill app object for top level navigation
 		var controllers = this.getControllersObject();
 		
 		controllers.setAppObject(app);
@@ -179,7 +180,7 @@ var Module = class {
 		var global = this.global;
 		this.controllers = new this.Controllers(global);
 		
-		// fill app object for top feelevel navigation
+		// fill app object for top level navigation
 		if (this.app)
 		this.controllers.app = this.app;
 		
