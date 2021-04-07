@@ -7,9 +7,9 @@ var Module = class {
 		this.name = 'mvc-wallet';
 		
 		this.global = null; // put by global on registration
-		this.app = null;
+		//this.app = null;
 		
-		this.controllers = null;
+		//this.controllers = null;
 
 		this.isready = false;
 		this.isloading = false;
