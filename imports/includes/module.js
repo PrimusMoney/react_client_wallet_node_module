@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.20.15.2021.04.07";
+		this.current_version = "0.20.16.2021.04.19";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -106,12 +106,27 @@ var Module = class {
 		var global = this.global;
 		
 		// initialization
-		global.registerHook('postFinalizeGlobalScopeInit_hook', 'mvc', this.postFinalizeGlobalScopeInit_hook);
+		global.registerHook('postFinalizeGlobalScopeInit_hook', this.name, this.postFinalizeGlobalScopeInit_hook);
 
 		// session
-		global.registerHook('creatingSession_hook', 'mvc', this.creatingSession_hook);
+		global.registerHook('creatingSession_hook', this.name, this.creatingSession_hook);
+	}
+
+	postRegisterModule() {
+		console.log('postRegisterModule called for ' + this.name);
+		if (!this.isloading) {
+			var global = this.global;
+			var self = this;
+			var rootscriptloader = global.getRootScriptLoader();
+			
+			this.loadModule(rootscriptloader, function() {
+				if (self.registerHooks)
+				self.registerHooks();
+			});
+		}
 	}
 	
+
 	//
 	// hooks
 	//
@@ -143,10 +158,18 @@ var Module = class {
 		
 		if (params && params['sessionuuid']) {
 			var sessionuuid = params['sessionuuid'];
+
+			var commonmodule = global.getModuleObject('common');
+
+			// if this is the first session created
+			var session_array = commonmodule.getSessionObjects();
+
+			if (session_array && (session_array.length == 1)) {
+				console.log('app bootstrapped with sessionuuid ' + sessionuuid);
 			
-			console.log('app bootstrapped with sessionuuid ' + sessionuuid);
+				session.setSessionUUID(sessionuuid);
+			}
 			
-			session.setSessionUUID(sessionuuid);
 			
 		}
 
