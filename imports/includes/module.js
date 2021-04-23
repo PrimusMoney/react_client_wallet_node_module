@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.20.16.2021.04.19";
+		this.current_version = "0.20.17.2021.04.23";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -1324,258 +1324,28 @@ var Module = class {
 	}
 
 	async makeWallet(sessionuuid, authname, schemeuuid, password) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
 		var global = this.global;
-		var _apicontrollers = this._getClientAPI();
-
-		var session = await _apicontrollers.getSessionObject(sessionuuid);
-		
-		if (!session)
-			return Promise.reject('could not find session ' + sessionuuid);
-
-		var	scheme = await _apicontrollers.getSchemeFromUUID(session, schemeuuid)
-		.catch(err => {});
-
-
-		var wallet_new;
-
-		if (!scheme || (scheme.isRemote() !== true))
-			wallet_new =  await _apicontrollers.createWallet(session, authname, password);
-		else
-			wallet_new =  await _apicontrollers.makeWallet(session, authname, schemeuuid);
-
-		if (wallet_new) {
-			let unlocked = await wallet_new.unlock(password);
-			
-			if (unlocked) {
-				// we add additional information like ownername and owner email
-				let walletsession = wallet_new._getSession();
-				let walletuser = walletsession.getSessionUserObject();
-
-				if (walletuser) {
-					wallet_new.setOwnerName(walletuser.getUserName());
-					wallet_new.setOwnerEmail(walletuser.getUserEmail());
-				}
-
-				await wallet_new.save();
-			}
-			else {
-				throw new Error('wrong credentials');
-			}
-
-			return wallet_new;
-		}
-		else
-			throw new Error('could not create wallet');
+		var mvcclientwallet = global.getModuleObject('mvc-client-wallet');
+		return mvcclientwallet.makeWallet(sessionuuid, authname, schemeuuid, password);
 	}
 
 	async makeWalletFromSession(sessionuuid, schemeuuid) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
 		var global = this.global;
-		var _apicontrollers = this._getClientAPI();
-
-		var commonmodule = global.getModuleObject('common');
-
-		var session = await commonmodule.createBlankSessionObject();
-
-		if (!session)
-			return Promise.reject('could not create session ' + sessionuuid);
-
-		session.setSessionUUID(sessionuuid);
-
-		var walletmodule = global.getModuleObject('wallet');
-		var Wallet = global.getModuleClass('wallet', 'Wallet');
-
-		var scheme = await walletmodule.getSchemeFromUUID(session, schemeuuid);
-
-		if (!scheme)
-			throw new Error('could not find scheme');
-
-		// set network config to the session
-		//var network = scheme.getNetworkConfig();
-		var network = this._getSchemeNetworkConfig(scheme);
-				
-		await _apicontrollers.setSessionNetworkConfig(session, network);
-
-		let isanonymous = await this._isAnonymousAsync(session);
-		if (isanonymous)
-			return Promise.reject('session needs to be authenticated');
-
-		let user = session.getSessionUserObject();
-
-		// we create a new wallet
-		var wallettype = scheme.getSchemeType();
-
-		var walletjson = {};
-		walletjson.type = wallettype;
-		walletjson.uuid = session.guid();;
-		walletjson.schemeuuid = schemeuuid;
-		walletjson.authname = scheme.getName();
-		walletjson.label = scheme.getName();
-
-		walletjson.ownername = (user ? user.getUserName() : '');
-		walletjson.owneremail = (user ? user.getUserEmail() : '');
-	
-
-		const wallet_new =  Wallet.readFromJson(walletmodule, session, walletjson);
-
-
-		if (wallet_new) {
-			// we attach the session to the wallet
-			await this._attachSessionToWallet(session, wallet_new);
-			
-			// and save it
-			await wallet_new.save();
-
-			return wallet_new;
-		}
-		else
-			throw new Error('could not create wallet');
-	}
-
-	async _isAnonymousAsync(session) {
-		// we clean authkey isSessionAnonymous_hook to make it really async
-		var global = this.global;
-
-		var authkeymodule = global.getModuleObject('authkey');
-
-		var authkeyinterface = authkeymodule.getAuthKeyInterface();
-		var currentanonymousflag = (session.user == null);
-
-		var sessionstatus = await authkeyinterface.session_status(session);
-
-		if (sessionstatus['isauthenticated'] === false) {
-			if (currentanonymousflag === false) {
-				session.disconnectUser();
-			}
-		}
-		else {
-			if (currentanonymousflag === true) {
-				var res = await authkeyinterface.load_user_in_session(session);
-
-				var authenticated = (res['status'] == '1' ? true : false);
-							
-				if (authenticated) {
-					// authenticated (and crypto-keys have been loaded)
-					// we get list of accounts (that could be encrypted)
-					await authkeymodule._initializeAccounts(session);
-					
-				}
-			}
-		}
-
-		return sessionstatus['isanonymous'];
-	}
-
-	async _attachSessionToWallet(session, wallet) {
-		wallet.walletsession = session;
-
-		if (session.user) {
-			wallet.locked = false;
-			await wallet._onUnlock();
-
-			// we check wallet user name and email
-			var bSave = false;
-
-			var session_username = session.user.getUserName();
-			var session_useremail = session.user.getUserEmail();
-
-			var wallet_ownername = wallet.getOwnerName();
-			var wallet_owneremail = wallet.getOwnerEmail();
-
-			if (!wallet_ownername) {
-				if (session_username) {
-					wallet.setOwnerName(session_username);
-					bSave = true;
-				}
-			}
-			else if (session_username && (session_username != wallet_ownername)) {
-				wallet.setOwnerName(session_username);
-				bSave = true;
-			}
-
-			if (!wallet_owneremail) {
-				if (session_useremail) {
-					wallet.setOwnerEmail(session_useremail);
-					bSave = true;
-				}
-			}
-			else if (session_useremail && (session_useremail != wallet_owneremail)) {
-				wallet.setOwnerEmail(session_useremail);
-				bSave = true;
-			}
-
-			if (bSave)
-			await wallet.save();
-		}
+		var mvcclientwallet = global.getModuleObject('mvc-client-wallet');
+		return mvcclientwallet.makeWalletFromSession(sessionuuid, schemeuuid);
 	}
 
 	async attachSessionToWallet(sessionuuid, walletuuid) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
 		var global = this.global;
-		var _apicontrollers = this._getClientAPI();
-
-		var commonmodule = global.getModuleObject('common');
-
-		var session = await commonmodule.createBlankSessionObject();
-
-		if (!session)
-			return Promise.reject('could not create session ' + sessionuuid);
-
-		session.setSessionUUID(sessionuuid);
-		
-		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
-	
-		if (!wallet)
-			return Promise.reject('could not find wallet ' + walletuuid);
-
-		var scheme = await wallet.getScheme();
-
-		if (!scheme)
-			throw new Error('could not find scheme for wallet ' + walletuuid);
-
-		// set network config to the session
-		//var network = scheme.getNetworkConfig();
-		var network = this._getSchemeNetworkConfig(scheme);
-				
-		await _apicontrollers.setSessionNetworkConfig(session, network);
-
-		let isanonymous = await this._isAnonymousAsync(session);
-		if (isanonymous)
-			return Promise.reject('session needs to be authenticated');
-
-
-		await this._attachSessionToWallet(session, wallet);
+		var mvcclientwallet = global.getModuleObject('mvc-client-wallet');
+		return mvcclientwallet.attachSessionToWallet(sessionuuid, walletuuid);
 	}
 
 	async lockWallet(sessionuuid, walletuuid) {
-		if (!sessionuuid)
-			return Promise.reject('session uuid is undefined');
-		
 		var global = this.global;
-		var _apicontrollers = this._getClientAPI();
+		var mvcclientwallet = global.getModuleObject('mvc-client-wallet');
+		return mvcclientwallet.lockWallet(sessionuuid, walletuuid);
 
-		var commonmodule = global.getModuleObject('common');
-
-		var session = await commonmodule.createBlankSessionObject();
-
-		if (!session)
-			return Promise.reject('could not create session ' + sessionuuid);
-
-		session.setSessionUUID(sessionuuid);
-		
-		var wallet = await _apicontrollers.getWalletFromUUID(session, walletuuid);
-	
-		if (!wallet)
-			return Promise.reject('could not find wallet ' + walletuuid);
-
-		return wallet.lock();
 	}
 	
 	//
