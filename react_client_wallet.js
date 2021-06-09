@@ -19,7 +19,7 @@ class React_Client_Wallet {
 		//var PrimusMoney_client_wallet = require('@primusmoney/client_wallet');
 		var PrimusMoney_client_wallet = require('../../@primusmoney/client_wallet');
 		
-		this.primusmoney_client_wallet = PrimusMoney_client_wallet.getObject();
+		this.primus_client_wallet = PrimusMoney_client_wallet.getObject();
 	}
 	
 	getVersion() {
@@ -41,10 +41,10 @@ class React_Client_Wallet {
 		}
 
 		// @primusmoney dependencies
-		var primusmoney_client_wallet = this.primusmoney_client_wallet;	
+		var primus_client_wallet = this.primus_client_wallet;	
 
-		if (primusmoney_client_wallet.initialized === false) {
-			await primusmoney_client_wallet.init();
+		if (primus_client_wallet.initialized === false) {
+			await primus_client_wallet.init();
 		}
 
 		
