@@ -125,6 +125,35 @@ class React_Client_Wallet {
 		return require('./js/control/controllers.js').getObject();
 	}
 
+	muteConsoleLog() {
+		if (typeof window !== 'undefined') {
+			if (!window.simplestore)
+				return;
+
+			// we are in a browser or react-native
+			window.simplestore.noconsoleoverload = false;
+
+			if (window.simplestore.Global) {
+				var _clientglobal = window.simplestore.Global.getGlobalObject();
+
+				_clientglobal.muteConsoleLog();
+			}
+		}
+		else if (typeof global !== 'undefined') {
+			if (!global.simplestore)
+				return;
+
+			// we are in nodejs
+			global.simplestore.noconsoleoverload = false;
+
+			if (global.simplestore.Global) {
+				var _clientglobal = global.simplestore.Global.getGlobalObject();
+
+				_clientglobal.muteConsoleLog();
+			}
+		}
+	}
+
 	// static methods
 	static getObject() {
 		if (react_client_wallet)
@@ -136,4 +165,7 @@ class React_Client_Wallet {
 	}
 }
 
+// use require('@primusmoney/react_client_wallet') to utilize React_Client_Wallet
+// in code. If it is necessary to use import React_Client_Wallet, module should
+// be conform to @primusmoney/react_pwa structuration of export and module.exports
 module.exports = React_Client_Wallet;

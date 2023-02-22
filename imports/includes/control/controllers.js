@@ -18,16 +18,22 @@ class Controllers {
 	gotoHome() {
 		if (this.app)
 			this.app.gotoHome();
+		else
+			this.global.signalEvent('on_gotoHome');
 	}
 	
 	gotoLoginPage() {
 		if (this.app)
 			this.app.gotoLoginPage();
+		else
+			this.global.signalEvent('on_gotoLoginPage');
 	}
 	
 	refreshPage() {
 		if (this.app)
 			this.app.refreshPage();
+		else
+			this.global.signalEvent('on_refreshPage');
 	}
 	
 }

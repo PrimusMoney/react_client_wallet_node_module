@@ -5,7 +5,7 @@ var Module = class {
 	
 	constructor() {
 		this.name = 'mvc';
-		this.current_version = "0.30.10.2021.06.30";
+		this.current_version = "0.30.15.2023.02.22";
 		
 		this.global = null; // put by global on registration
 		this.app = null;
@@ -955,6 +955,7 @@ var Module = class {
 	}
 
 	async getSchemeTransactionInfo(sessionuuid, schemeuuid, feelevel = null) {
+		console.log('OBSOLETE: Module.getSchemeTransactionInfo should no longer be used!');
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
 		
@@ -1064,15 +1065,18 @@ var Module = class {
 		schemeinfo.network.keyserver.rest_server_url = networkconfig.keyserver.rest_server_url;
 		schemeinfo.network.keyserver.rest_server_api_path = networkconfig.keyserver.rest_server_api_path;
 
-		schemeinfo.network.ethnodeserver = {};
-		schemeinfo.network.ethnodeserver.activate = networkconfig.ethnodeserver.activate;
-		schemeinfo.network.ethnodeserver.rest_server_url = networkconfig.ethnodeserver.rest_server_url;
-		schemeinfo.network.ethnodeserver.rest_server_api_path = networkconfig.ethnodeserver.rest_server_api_path;
-		schemeinfo.network.ethnodeserver.web3_provider_url = networkconfig.ethnodeserver.web3_provider_url;
+		if (networkconfig.ethnodeserver) {
+			schemeinfo.network.ethnodeserver = {};
+			schemeinfo.network.ethnodeserver.activate = networkconfig.ethnodeserver.activate;
+			schemeinfo.network.ethnodeserver.rest_server_url = networkconfig.ethnodeserver.rest_server_url;
+			schemeinfo.network.ethnodeserver.rest_server_api_path = networkconfig.ethnodeserver.rest_server_api_path;
+			schemeinfo.network.ethnodeserver.web3_provider_url = networkconfig.ethnodeserver.web3_provider_url;
+		}
 		
 	}
 	
 	async getSchemeTransactionUnitsThreshold(sessionuuid, schemeuuid) {
+		console.log('OBSOLETE: Module.getSchemeTransactionUnitsThreshold should no longer be used!');
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
 		
@@ -1107,6 +1111,7 @@ var Module = class {
 	}
 
 	async getSchemeInfoFromWeb3Url(sessionuuid, web3url) {
+		console.log('OBSOLETE: Module.getSchemeInfoFromWeb3Url should no longer be used!');
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
 		
@@ -1165,6 +1170,7 @@ var Module = class {
 	}
 	
 	async canSchemeHandleWeb3Url(sessionuuid, schemeuuid, web3_provider_url) {
+		console.log('OBSOLETE: Module.canSchemeHandleWeb3Url should no longer be used!');
 		if (!sessionuuid)
 			return Promise.reject('session uuid is undefined');
 		
@@ -1712,7 +1718,7 @@ var Module = class {
 		for (var i = 0; i < localschemes.length; i++) {
 			// compare with web3_provider_url to see if we have a scheme that matches
 			var networkconfig = localschemes[i].getNetworkConfig()
-			if (networkconfig.ethnodeserver.web3_provider_url == web3_provider_url) {
+			if (networkconfig.ethnodeserver && (networkconfig.ethnodeserver.web3_provider_url == web3_provider_url)) {
 				bCreateScheme = false;
 				scheme = localschemes[i];
 				break;
@@ -1756,6 +1762,9 @@ var Module = class {
 		
 		let cardinfo = await this.getCardInfo(sessionuuid, walletuuid, carduuid);
 		let schemeinfo = await this.getSchemeInfo(sessionuuid, cardinfo.schemeuuid);
+
+		if (!schemeinfo.network.ethnodeserver)
+			return false;
 		
 		if (schemeinfo.network.ethnodeserver.web3_provider_url != web3_provider_url)
 			return false;

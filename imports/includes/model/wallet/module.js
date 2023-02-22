@@ -354,7 +354,7 @@ var Module = class {
 						for (var i = 0; i < localschemes.length; i++) {
 							// compare with web3_provider_url to see if we have a scheme that matches
 							var networkconfig = localschemes[i].getNetworkConfig()
-							if (networkconfig.ethnodeserver.web3_provider_url == configurl) {
+							if (networkconfig.ethnodeserver && (networkconfig.ethnodeserver.web3_provider_url == configurl)) {
 								bCreateScheme = false;
 								scheme = localschemes[i];
 								break;
@@ -709,7 +709,7 @@ var Module = class {
 								for (var i = 0; i < localschemes.length; i++) {
 									// compare with web3_provider_url to see if we have a scheme that matches
 									var networkconfig = localschemes[i].getNetworkConfig()
-									if (networkconfig.ethnodeserver.web3_provider_url == configurl) {
+									if (networkconfig.ethnodeserver && (networkconfig.ethnodeserver.web3_provider_url == configurl)) {
 										bCreateScheme = false;
 										scheme = localschemes[i];
 										break;
